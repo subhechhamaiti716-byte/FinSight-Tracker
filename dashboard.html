@@ -159,6 +159,9 @@
                 
                 console.log('User authenticated:', currentUser);
                 
+                // Load and apply user's theme
+                loadUserTheme(currentUser);
+                
                 // Display user
                 setupUserProfile(currentUser);
                 
@@ -200,11 +203,18 @@
         });
         
         function loadDashboardData() {
-            console.log('Loading real transaction data...');
+            console.log('Loading user-specific transaction data...');
             
-            // Get transactions from localStorage
-            const transactions = getTransactions();
-            console.log('Found transactions:', transactions.length);
+            // Get current user
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Get user-specific transactions
+            const transactions = getUserTransactions(currentUser);
+            console.log('Found transactions for', currentUser + ':', transactions.length);
             
             // Calculate real totals
             const totals = calculateTotals(transactions);
@@ -241,62 +251,76 @@
             renderRecentTransactions(transactions);
         }
         
-        function getTransactions() {
-            const saved = localStorage.getItem('transactions');
+        // User-specific data management functions
+        function getUserTransactions(username) {
+            const userKey = `transactions_${username}`;
+            const saved = localStorage.getItem(userKey);
+            
             if (saved) {
                 return JSON.parse(saved);
             } else {
-                // Create initial demo transactions if none exist
-                const demoTransactions = [
-                    {
-                        id: 1,
-                        type: 'expense',
-                        category: 'food',
-                        amount: 2500,
-                        date: '2025-12-10',
-                        time: '14:30',
-                        note: 'Grocery shopping'
-                    },
-                    {
-                        id: 2,
-                        type: 'income',
-                        category: 'salary',
-                        amount: 50000,
-                        date: '2025-12-01',
-                        time: '09:00',
-                        note: 'Monthly salary'
-                    },
-                    {
-                        id: 3,
-                        type: 'expense',
-                        category: 'transport',
-                        amount: 1000,
-                        date: '2025-12-09',
-                        time: '08:15',
-                        note: 'Metro card recharge'
-                    },
-                    {
-                        id: 4,
-                        type: 'expense',
-                        category: 'entertainment',
-                        amount: 1500,
-                        date: '2025-12-08',
-                        time: '19:00',
-                        note: 'Movie tickets'
-                    },
-                    {
-                        id: 5,
-                        type: 'expense',
-                        category: 'bills',
-                        amount: 3000,
-                        date: '2025-12-05',
-                        time: '10:00',
-                        note: 'Electricity bill'
+                // Check if this is a new user
+                const isNewUser = sessionStorage.getItem('isNewUser');
+                
+                if (isNewUser === 'true') {
+                    // New user gets completely blank app - no migration
+                    sessionStorage.removeItem('isNewUser');
+                    // Save empty array to prevent future migration attempts
+                    localStorage.setItem(userKey, JSON.stringify([]));
+                    return [];
+                } else {
+                    // Only migrate for existing users who don't have user-specific data yet
+                    // But first check if we've already done migration for this user
+                    const migrationKey = `migrated_${username}`;
+                    const alreadyMigrated = localStorage.getItem(migrationKey);
+                    
+                    if (!alreadyMigrated) {
+                        const oldTransactions = localStorage.getItem('transactions');
+                        if (oldTransactions) {
+                            const transactions = JSON.parse(oldTransactions);
+                            // Save to user-specific key
+                            localStorage.setItem(userKey, JSON.stringify(transactions));
+                            // Mark as migrated
+                            localStorage.setItem(migrationKey, 'true');
+                            return transactions;
+                        }
+                        // Mark as migrated even if no old data found
+                        localStorage.setItem(migrationKey, 'true');
                     }
-                ];
-                localStorage.setItem('transactions', JSON.stringify(demoTransactions));
-                return demoTransactions;
+                    return [];
+                }
             }
+        }
+
+        function saveUserTransactions(username, transactions) {
+            const userKey = `transactions_${username}`;
+            localStorage.setItem(userKey, JSON.stringify(transactions));
+        }
+
+        function getUserBudgets(username) {
+            const userKey = `budgets_${username}`;
+            const saved = localStorage.getItem(userKey);
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function saveUserBudgets(username, budgets) {
+            const userKey = `budgets_${username}`;
+            localStorage.setItem(userKey, JSON.stringify(budgets));
+        }
+
+        function getUserSettings(username) {
+            const userKey = `settings_${username}`;
+            const saved = localStorage.getItem(userKey);
+            return saved ? JSON.parse(saved) : {
+                theme: 'light',
+                currency: 'INR',
+                notifications: true
+            };
+        }
+
+        function saveUserSettings(username, settings) {
+            const userKey = `settings_${username}`;
+            localStorage.setItem(userKey, JSON.stringify(settings));
         }
         
         function calculateTotals(transactions) {
@@ -358,8 +382,9 @@
         }
         
         function createDemoCharts() {
-            console.log('Creating charts with real data...');
-            const transactions = getTransactions();
+            console.log('Creating charts with user-specific data...');
+            const currentUser = sessionStorage.getItem('currentUser');
+            const transactions = getUserTransactions(currentUser);
             
             // Expense Pie Chart (Real Data)
             const expenseCtx = document.getElementById('expensePieChart');
@@ -647,6 +672,21 @@
             setTimeout(() => {
                 toast.remove();
             }, 2000);
+        }
+
+        // Theme management functions
+        function loadUserTheme(username) {
+            const savedTheme = localStorage.getItem(`theme_${username}`) || 'light';
+            applyTheme(savedTheme);
+            console.log('Applied theme for user:', username, '- Theme:', savedTheme);
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
         }
 
         // Add CSS for dashboard styling
