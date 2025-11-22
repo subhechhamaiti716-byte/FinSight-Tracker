@@ -86,6 +86,9 @@
                 return;
             }
             
+            // Load and apply user's theme
+            loadUserTheme(currentUser);
+            
             // Display user
             document.getElementById('currentUser').textContent = '👤 ' + currentUser;
             
@@ -113,64 +116,73 @@
         });
         
         function loadTransactions() {
-            // Load demo transactions or from localStorage
-            const saved = localStorage.getItem('transactions');
-            if (saved) {
-                allTransactions = JSON.parse(saved);
-            } else {
-                // Demo transactions
-                allTransactions = [
-                    {
-                        id: 1,
-                        type: 'expense',
-                        category: 'food',
-                        amount: 2500,
-                        date: '2025-12-10',
-                        time: '14:30',
-                        note: 'Grocery shopping'
-                    },
-                    {
-                        id: 2,
-                        type: 'income',
-                        category: 'salary',
-                        amount: 50000,
-                        date: '2025-12-01',
-                        time: '09:00',
-                        note: 'Monthly salary'
-                    },
-                    {
-                        id: 3,
-                        type: 'expense',
-                        category: 'transport',
-                        amount: 1000,
-                        date: '2025-12-09',
-                        time: '08:15',
-                        note: 'Metro card recharge'
-                    },
-                    {
-                        id: 4,
-                        type: 'expense',
-                        category: 'entertainment',
-                        amount: 1500,
-                        date: '2025-12-08',
-                        time: '19:00',
-                        note: 'Movie tickets'
-                    },
-                    {
-                        id: 5,
-                        type: 'expense',
-                        category: 'bills',
-                        amount: 3000,
-                        date: '2025-12-05',
-                        time: '10:00',
-                        note: 'Electricity bill'
-                    }
-                ];
-                localStorage.setItem('transactions', JSON.stringify(allTransactions));
+            // Get current user
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
             }
             
+            // If this is a new user, ensure old global data is cleared
+            const isNewUser = sessionStorage.getItem('isNewUser');
+            if (isNewUser === 'true') {
+                console.log('Clearing old global data for new user');
+                localStorage.removeItem('transactions');
+                localStorage.removeItem('budgets');
+            }
+            
+            // Load user-specific transactions
+            allTransactions = getUserTransactions(currentUser);
             filteredTransactions = [...allTransactions];
             renderTransactionsPage();
+        }
+
+        // User-specific data management functions
+        function getUserTransactions(username) {
+            const userKey = `transactions_${username}`;
+            const saved = localStorage.getItem(userKey);
+            
+            if (saved) {
+                return JSON.parse(saved);
+            } else {
+                // Check if this is a new user
+                const isNewUser = sessionStorage.getItem('isNewUser');
+                
+                if (isNewUser === 'true') {
+                    // New user gets completely blank app - NO MIGRATION AT ALL
+                    console.log('New user detected, providing blank data');
+                    sessionStorage.removeItem('isNewUser');
+                    localStorage.setItem(userKey, JSON.stringify([]));
+                    return [];
+                } else {
+                    // For existing users, check if we should migrate
+                    const migrationKey = `migrated_${username}`;
+                    const alreadyMigrated = localStorage.getItem(migrationKey);
+                    
+                    // Only migrate if not already done AND user has no data
+                    if (!alreadyMigrated) {
+                        const oldTransactions = localStorage.getItem('transactions');
+                        if (oldTransactions) {
+                            console.log('Migrating old data for existing user:', username);
+                            const transactions = JSON.parse(oldTransactions);
+                            localStorage.setItem(userKey, JSON.stringify(transactions));
+                            localStorage.setItem(migrationKey, 'true');
+                            return transactions;
+                        }
+                        // Mark as migrated even if no old data
+                        localStorage.setItem(migrationKey, 'true');
+                    }
+                    
+                    // Return empty array for users with no data
+                    console.log('No data found for user:', username);
+                    return [];
+                }
+            }
+        }
+
+        function saveUserTransactions(username, transactions) {
+            const userKey = `transactions_${username}`;
+            localStorage.setItem(userKey, JSON.stringify(transactions));
         }
         
         function setupTransactionHandlers() {
@@ -317,25 +329,36 @@
             const ctx = document.getElementById('spendingAnalysisChart');
             if (!ctx) return;
             
-            // Generate sample data based on period
+            // Get real user-specific transaction data
+            const currentUser = sessionStorage.getItem('currentUser');
+            const userTransactions = allTransactions || [];
+            
+            console.log('Creating chart for user:', currentUser, 'with', userTransactions.length, 'transactions');
+            
+            // Generate real data based on user transactions and period
             let labels, incomeData, expenseData;
             
-            switch (currentPeriod) {
-                case 'week':
-                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                    incomeData = [0, 0, 0, 0, 50000, 0, 0];
-                    expenseData = [500, 800, 1200, 600, 300, 2000, 1500];
-                    break;
-                case 'month':
-                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                    incomeData = [50000, 0, 0, 0];
-                    expenseData = [8000, 6000, 7000, 4000];
-                    break;
-                case 'year':
-                    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    incomeData = [50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000];
-                    expenseData = [30000, 28000, 32000, 25000, 35000, 30000, 28000, 33000, 29000, 31000, 25000, 27000];
-                    break;
+            if (userTransactions.length === 0) {
+                // New user or no transactions - show empty chart
+                switch (currentPeriod) {
+                    case 'week':
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                        break;
+                    case 'month':
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                        break;
+                    case 'year':
+                        labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        break;
+                }
+                incomeData = new Array(labels.length).fill(0);
+                expenseData = new Array(labels.length).fill(0);
+            } else {
+                // Calculate real data from user transactions
+                const chartData = calculateChartData(userTransactions, currentPeriod);
+                labels = chartData.labels;
+                incomeData = chartData.incomeData;
+                expenseData = chartData.expenseData;
             }
             
             // Destroy existing chart if it exists
@@ -366,9 +389,98 @@
                         y: {
                             beginAtZero: true
                         }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
                     }
                 }
             });
+        }
+
+        function calculateChartData(transactions, period) {
+            let labels, incomeData, expenseData;
+            
+            switch (period) {
+                case 'week':
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    incomeData = new Array(7).fill(0);
+                    expenseData = new Array(7).fill(0);
+                    
+                    // Get current week's transactions
+                    const now = new Date();
+                    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+                    
+                    transactions.forEach(tx => {
+                        const txDate = new Date(tx.date);
+                        const daysDiff = Math.floor((txDate - startOfWeek) / (1000 * 60 * 60 * 24));
+                        
+                        if (daysDiff >= 0 && daysDiff < 7) {
+                            if (tx.type === 'income') {
+                                incomeData[daysDiff] += tx.amount;
+                            } else {
+                                expenseData[daysDiff] += tx.amount;
+                            }
+                        }
+                    });
+                    break;
+                    
+                case 'month':
+                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                    incomeData = new Array(4).fill(0);
+                    expenseData = new Array(4).fill(0);
+                    
+                    // Get current month's transactions grouped by week
+                    const currentMonth = new Date().getMonth();
+                    const currentYear = new Date().getFullYear();
+                    
+                    transactions.forEach(tx => {
+                        const txDate = new Date(tx.date);
+                        if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
+                            const weekOfMonth = Math.floor((txDate.getDate() - 1) / 7);
+                            const weekIndex = Math.min(weekOfMonth, 3);
+                            
+                            if (tx.type === 'income') {
+                                incomeData[weekIndex] += tx.amount;
+                            } else {
+                                expenseData[weekIndex] += tx.amount;
+                            }
+                        }
+                    });
+                    break;
+                    
+                case 'year':
+                    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    incomeData = new Array(12).fill(0);
+                    expenseData = new Array(12).fill(0);
+                    
+                    // Get current year's transactions grouped by month
+                    const year = new Date().getFullYear();
+                    
+                    transactions.forEach(tx => {
+                        const txDate = new Date(tx.date);
+                        if (txDate.getFullYear() === year) {
+                            const monthIndex = txDate.getMonth();
+                            
+                            if (tx.type === 'income') {
+                                incomeData[monthIndex] += tx.amount;
+                            } else {
+                                expenseData[monthIndex] += tx.amount;
+                            }
+                        }
+                    });
+                    break;
+            }
+            
+            return { labels, incomeData, expenseData };
         }
         
         function editTransaction(id) {
@@ -377,9 +489,10 @@
         
         function deleteTransaction(id) {
             if (confirm('Are you sure you want to delete this transaction?')) {
+                const currentUser = sessionStorage.getItem('currentUser');
                 allTransactions = allTransactions.filter(tx => tx.id !== id);
                 filteredTransactions = filteredTransactions.filter(tx => tx.id !== id);
-                localStorage.setItem('transactions', JSON.stringify(allTransactions));
+                saveUserTransactions(currentUser, allTransactions);
                 renderTransactionsPage();
                 showToast('Transaction deleted successfully', 'success');
             }
@@ -488,6 +601,21 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Theme management functions
+        function loadUserTheme(username) {
+            const savedTheme = localStorage.getItem(`theme_${username}`) || 'light';
+            applyTheme(savedTheme);
+            console.log('Applied theme for user:', username, '- Theme:', savedTheme);
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
     </script>
 </body>
 </html>
