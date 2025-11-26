@@ -100,6 +100,9 @@
                 return;
             }
             
+            // Load and apply user's theme
+            loadUserTheme(currentUser);
+            
             // Display user
             document.getElementById('currentUser').textContent = '👤 ' + currentUser;
             
@@ -245,24 +248,39 @@
         }
         
         function getTransactions() {
-            return JSON.parse(localStorage.getItem('transactions') || '[]');
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return [];
+            }
+            
+            const userKey = `transactions_${currentUser}`;
+            return JSON.parse(localStorage.getItem(userKey) || '[]');
         }
         
         function updateTransaction(updatedTransaction) {
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
             const transactions = getTransactions();
             const index = transactions.findIndex(tx => tx.id === updatedTransaction.id);
             
             if (index !== -1) {
                 transactions[index] = updatedTransaction;
-                localStorage.setItem('transactions', JSON.stringify(transactions));
+                const userKey = `transactions_${currentUser}`;
+                localStorage.setItem(userKey, JSON.stringify(transactions));
             }
         }
         
         function getCategories(type) {
+            const currentUser = sessionStorage.getItem('currentUser');
             const defaultExpense = ['food', 'transport', 'medical', 'rent', 'entertainment', 'shopping', 'bills', 'other'];
             const defaultIncome = ['salary', 'freelance', 'investment', 'gift', 'other'];
             
-            const saved = localStorage.getItem(type + 'Categories');
+            const saved = localStorage.getItem(`${type}Categories_${currentUser}`);
             return saved ? JSON.parse(saved) : (type === 'expense' ? defaultExpense : defaultIncome);
         }
         
@@ -392,6 +410,21 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Theme management functions
+        function loadUserTheme(username) {
+            const savedTheme = localStorage.getItem(`theme_${username}`) || 'light';
+            applyTheme(savedTheme);
+            console.log('Applied theme for user:', username, '- Theme:', savedTheme);
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
     </script>
 </body>
 </html>
