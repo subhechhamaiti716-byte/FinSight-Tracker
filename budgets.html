@@ -69,6 +69,9 @@
                 return;
             }
             
+            // Load and apply user's theme
+            loadUserTheme(currentUser);
+            
             // Display user
             document.getElementById('currentUser').textContent = '👤 ' + currentUser;
             
@@ -131,7 +134,9 @@
                 }
                 
                 // Save budgets
-                localStorage.setItem('budgets', JSON.stringify(budgets));
+                const currentUser = sessionStorage.getItem('currentUser');
+                const userKey = `budgets_${currentUser}`;
+                localStorage.setItem(userKey, JSON.stringify(budgets));
                 
                 showToast('Budgets saved successfully!', 'success');
                 
@@ -370,11 +375,25 @@
         }
         
         function getBudgets() {
-            return JSON.parse(localStorage.getItem('budgets') || '{}');
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return {};
+            }
+            
+            const userKey = `budgets_${currentUser}`;
+            return JSON.parse(localStorage.getItem(userKey) || '{}');
         }
         
         function getTransactions() {
-            return JSON.parse(localStorage.getItem('transactions') || '[]');
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return [];
+            }
+            
+            const userKey = `transactions_${currentUser}`;
+            return JSON.parse(localStorage.getItem(userKey) || '[]');
         }
         
         function showToast(message, type) {
@@ -757,6 +776,21 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Theme management functions
+        function loadUserTheme(username) {
+            const savedTheme = localStorage.getItem(`theme_${username}`) || 'light';
+            applyTheme(savedTheme);
+            console.log('Applied theme for user:', username, '- Theme:', savedTheme);
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
     </script>
 </body>
 </html>
