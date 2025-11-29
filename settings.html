@@ -136,13 +136,15 @@
         });
         
         function loadSettings() {
+            const currentUser = sessionStorage.getItem('currentUser');
+            
             // Load theme setting
-            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedTheme = localStorage.getItem(`theme_${currentUser}`) || 'light';
             document.getElementById('themeToggle').value = savedTheme;
             applyTheme(savedTheme);
             
             // Load currency setting
-            const savedCurrency = localStorage.getItem('currency') || 'INR';
+            const savedCurrency = localStorage.getItem(`currency_${currentUser}`) || 'INR';
             document.getElementById('currencySelect').value = savedCurrency;
             
             // Load categories
@@ -152,16 +154,18 @@
         function setupSettingsHandlers() {
             // Theme toggle
             document.getElementById('themeToggle').addEventListener('change', function(e) {
+                const currentUser = sessionStorage.getItem('currentUser');
                 const theme = e.target.value;
-                localStorage.setItem('theme', theme);
+                localStorage.setItem(`theme_${currentUser}`, theme);
                 applyTheme(theme);
                 showToast('Theme updated successfully', 'success');
             });
             
             // Currency selector
             document.getElementById('currencySelect').addEventListener('change', function(e) {
+                const currentUser = sessionStorage.getItem('currentUser');
                 const currency = e.target.value;
-                localStorage.setItem('currency', currency);
+                localStorage.setItem(`currency_${currentUser}`, currency);
                 showToast('Currency updated successfully', 'success');
             });
             
@@ -235,25 +239,28 @@
         }
         
         function getCategories(type) {
+            const currentUser = sessionStorage.getItem('currentUser');
             const defaultExpense = ['food', 'transport', 'medical', 'rent', 'entertainment', 'shopping', 'bills', 'other'];
             const defaultIncome = ['salary', 'freelance', 'investment', 'gift', 'other'];
             
-            const saved = localStorage.getItem(type + 'Categories');
+            const saved = localStorage.getItem(`${type}Categories_${currentUser}`);
             return saved ? JSON.parse(saved) : (type === 'expense' ? defaultExpense : defaultIncome);
         }
         
         function addCategory(type, category) {
+            const currentUser = sessionStorage.getItem('currentUser');
             const categories = getCategories(type);
             if (!categories.includes(category)) {
                 categories.push(category);
-                localStorage.setItem(type + 'Categories', JSON.stringify(categories));
+                localStorage.setItem(`${type}Categories_${currentUser}`, JSON.stringify(categories));
             }
         }
         
         function removeCategory(type, category) {
+            const currentUser = sessionStorage.getItem('currentUser');
             const categories = getCategories(type);
             const filtered = categories.filter(cat => cat !== category);
-            localStorage.setItem(type + 'Categories', JSON.stringify(filtered));
+            localStorage.setItem(`${type}Categories_${currentUser}`, JSON.stringify(filtered));
         }
         
         function renderCategories(containerId, categories, type) {
@@ -275,16 +282,18 @@
         }
         
         function exportData() {
+            const currentUser = sessionStorage.getItem('currentUser');
             const data = {
-                transactions: JSON.parse(localStorage.getItem('transactions') || '[]'),
-                budgets: JSON.parse(localStorage.getItem('budgets') || '[]'),
+                transactions: JSON.parse(localStorage.getItem(`transactions_${currentUser}`) || '[]'),
+                budgets: JSON.parse(localStorage.getItem(`budgets_${currentUser}`) || '{}'),
                 expenseCategories: getCategories('expense'),
                 incomeCategories: getCategories('income'),
                 settings: {
-                    theme: localStorage.getItem('theme') || 'light',
-                    currency: localStorage.getItem('currency') || 'INR'
+                    theme: localStorage.getItem(`theme_${currentUser}`) || 'light',
+                    currency: localStorage.getItem(`currency_${currentUser}`) || 'INR'
                 },
-                exportDate: new Date().toISOString()
+                exportDate: new Date().toISOString(),
+                username: currentUser
             };
             
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -303,13 +312,14 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     
-                    if (data.transactions) localStorage.setItem('transactions', JSON.stringify(data.transactions));
-                    if (data.budgets) localStorage.setItem('budgets', JSON.stringify(data.budgets));
-                    if (data.expenseCategories) localStorage.setItem('expenseCategories', JSON.stringify(data.expenseCategories));
-                    if (data.incomeCategories) localStorage.setItem('incomeCategories', JSON.stringify(data.incomeCategories));
+                    const currentUser = sessionStorage.getItem('currentUser');
+                    if (data.transactions) localStorage.setItem(`transactions_${currentUser}`, JSON.stringify(data.transactions));
+                    if (data.budgets) localStorage.setItem(`budgets_${currentUser}`, JSON.stringify(data.budgets));
+                    if (data.expenseCategories) localStorage.setItem(`expenseCategories_${currentUser}`, JSON.stringify(data.expenseCategories));
+                    if (data.incomeCategories) localStorage.setItem(`incomeCategories_${currentUser}`, JSON.stringify(data.incomeCategories));
                     if (data.settings) {
-                        if (data.settings.theme) localStorage.setItem('theme', data.settings.theme);
-                        if (data.settings.currency) localStorage.setItem('currency', data.settings.currency);
+                        if (data.settings.theme) localStorage.setItem(`theme_${currentUser}`, data.settings.theme);
+                        if (data.settings.currency) localStorage.setItem(`currency_${currentUser}`, data.settings.currency);
                     }
                     
                     showToast('Data imported successfully! Refreshing...', 'success');
