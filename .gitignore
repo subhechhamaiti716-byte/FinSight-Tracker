@@ -1,9 +1,23 @@
-# Editor directories and files
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
 # OS files
 .DS_Store
@@ -14,3 +28,9 @@ Thumbs.db
 
 # Temporary files
 *.tmp
+*.temp
+
+# Deployment scripts (optional - remove if you want to keep them)
+deploy-*.sh
+git-commit-*.sh
+run-all-commits.sh
