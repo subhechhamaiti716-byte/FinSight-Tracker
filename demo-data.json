@@ -1,0 +1,204 @@
+{
+  "username": "demo",
+  "transactions": [
+    {
+      "type": "income",
+      "category": "salary",
+      "amount": 50000,
+      "date": "2024-01-01",
+      "time": "09:00",
+      "note": "Monthly salary"
+    },
+    {
+      "type": "expense",
+      "category": "rent",
+      "amount": 15000,
+      "date": "2024-01-05",
+      "time": "10:00",
+      "note": "Monthly rent payment"
+    },
+    {
+      "type": "expense",
+      "category": "food",
+      "amount": 3500,
+      "date": "2024-01-10",
+      "time": null,
+      "note": "Grocery shopping"
+    },
+    {
+      "type": "expense",
+      "category": "transport",
+      "amount": 2000,
+      "date": "2024-01-15",
+      "time": null,
+      "note": "Monthly metro pass"
+    },
+    {
+      "type": "income",
+      "category": "freelance",
+      "amount": 8000,
+      "date": "2024-01-20",
+      "time": "14:30",
+      "note": "Website project"
+    },
+    {
+      "type": "expense",
+      "category": "entertainment",
+      "amount": 1500,
+      "date": "2024-01-22",
+      "time": "19:00",
+      "note": "Movie and dinner"
+    },
+    {
+      "type": "expense",
+      "category": "bills",
+      "amount": 2500,
+      "date": "2024-01-25",
+      "time": null,
+      "note": "Electricity and internet"
+    },
+    {
+      "type": "income",
+      "category": "salary",
+      "amount": 50000,
+      "date": "2024-02-01",
+      "time": "09:00",
+      "note": "Monthly salary"
+    },
+    {
+      "type": "expense",
+      "category": "rent",
+      "amount": 15000,
+      "date": "2024-02-05",
+      "time": "10:00",
+      "note": "Monthly rent payment"
+    },
+    {
+      "type": "expense",
+      "category": "medical",
+      "amount": 3000,
+      "date": "2024-02-08",
+      "time": "11:00",
+      "note": "Doctor consultation and medicines"
+    },
+    {
+      "type": "expense",
+      "category": "shopping",
+      "amount": 5000,
+      "date": "2024-02-14",
+      "time": "16:00",
+      "note": "Clothing shopping"
+    },
+    {
+      "type": "expense",
+      "category": "food",
+      "amount": 4000,
+      "date": "2024-02-18",
+      "time": null,
+      "note": "Grocery shopping"
+    },
+    {
+      "type": "income",
+      "category": "investment",
+      "amount": 2500,
+      "date": "2024-02-20",
+      "time": null,
+      "note": "Dividend income"
+    },
+    {
+      "type": "expense",
+      "category": "transport",
+      "amount": 2000,
+      "date": "2024-02-22",
+      "time": null,
+      "note": "Monthly metro pass"
+    },
+    {
+      "type": "expense",
+      "category": "entertainment",
+      "amount": 2000,
+      "date": "2024-02-25",
+      "time": "20:00",
+      "note": "Concert tickets"
+    },
+    {
+      "type": "income",
+      "category": "salary",
+      "amount": 50000,
+      "date": "2024-03-01",
+      "time": "09:00",
+      "note": "Monthly salary"
+    },
+    {
+      "type": "expense",
+      "category": "rent",
+      "amount": 15000,
+      "date": "2024-03-05",
+      "time": "10:00",
+      "note": "Monthly rent payment"
+    },
+    {
+      "type": "expense",
+      "category": "food",
+      "amount": 3800,
+      "date": "2024-03-12",
+      "time": null,
+      "note": "Grocery shopping"
+    },
+    {
+      "type": "income",
+      "category": "gift",
+      "amount": 5000,
+      "date": "2024-03-15",
+      "time": null,
+      "note": "Birthday gift from family"
+    },
+    {
+      "type": "expense",
+      "category": "bills",
+      "amount": 2800,
+      "date": "2024-03-20",
+      "time": null,
+      "note": "Utilities"
+    },
+    {
+      "type": "expense",
+      "category": "transport",
+      "amount": 2000,
+      "date": "2024-03-25",
+      "time": null,
+      "note": "Monthly metro pass"
+    },
+    {
+      "type": "expense",
+      "category": "other",
+      "amount": 1200,
+      "date": "2024-03-28",
+      "time": null,
+      "note": "Miscellaneous expenses"
+    }
+  ],
+  "budgets": [
+    {
+      "category": "food",
+      "amount": 5000
+    },
+    {
+      "category": "transport",
+      "amount": 3000
+    },
+    {
+      "category": "entertainment",
+      "amount": 3000
+    },
+    {
+      "category": "shopping",
+      "amount": 5000
+    },
+    {
+      "category": "bills",
+      "amount": 3000
+    }
+  ],
+  "exportDate": "2024-03-30T00:00:00.000Z"
+}

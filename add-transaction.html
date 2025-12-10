@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Transaction - FinSight Tracker</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" role="navigation" aria-label="Main navigation">
+            <div class="sidebar-header">
+                <h1>💰 FinSight</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="dashboard.html">📊 Dashboard</a></li>
+                <li><a href="transactions.html">💳 Transactions</a></li>
+                <li><a href="add-transaction.html" class="active" aria-current="page">➕ Add Transaction</a></li>
+                <li><a href="budgets.html">🎯 Budgets</a></li>
+                <li><a href="settings.html">⚙️ Settings</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <span id="currentUser" class="user-info"></span>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h2>Add Transaction</h2>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+            </header>
+
+            <div class="form-container">
+                <div class="card">
+                    <form id="transactionForm" class="transaction-form">
+                        <div class="form-group">
+                            <label>Type</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="type" value="expense" checked required>
+                                    <span>📉 Expense</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="type" value="income" required>
+                                    <span>📈 Income</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" name="category" required aria-required="true">
+                                <option value="">Select category</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="amount">Amount</label>
+                            <input type="number" id="amount" name="amount" step="0.01" min="0.01" 
+                                   required aria-required="true" placeholder="0.00">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" name="date" required aria-required="true">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="time">Time (Optional)</label>
+                            <input type="time" id="time" name="time">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="note">Note (Optional)</label>
+                            <textarea id="note" name="note" rows="3" 
+                                      placeholder="Add a note about this transaction..."></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Add Transaction</button>
+                            <a href="transactions.html" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Add Transaction page functionality for GitHub Pages
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Display user
+            document.getElementById('currentUser').textContent = '👤 ' + currentUser;
+            
+            // Logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                sessionStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            });
+            
+            // Mobile menu toggle
+            const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (mobileMenuToggle) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+            
+            // Initialize form
+            initializeForm();
+            setupFormHandlers();
+        });
+        
+        function initializeForm() {
+            // Set current date and time
+            const now = new Date();
+            document.getElementById('date').value = now.toISOString().split('T')[0];
+            document.getElementById('time').value = now.toTimeString().slice(0, 5);
+            
+            // Load categories
+            updateCategoryOptions();
+            
+            // Setup type change handler
+            const typeInputs = document.querySelectorAll('input[name="type"]');
+            typeInputs.forEach(input => {
+                input.addEventListener('change', updateCategoryOptions);
+            });
+        }
+        
+        function updateCategoryOptions() {
+            const selectedType = document.querySelector('input[name="type"]:checked').value;
+            const categorySelect = document.getElementById('category');
+            
+            const expenseCategories = getCategories('expense');
+            const incomeCategories = getCategories('income');
+            
+            const categories = selectedType === 'expense' ? expenseCategories : incomeCategories;
+            
+            categorySelect.innerHTML = '<option value="">Select category</option>' +
+                categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        }
+        
+        function getCategories(type) {
+            const defaultExpense = ['food', 'transport', 'medical', 'rent', 'entertainment', 'shopping', 'bills', 'other'];
+            const defaultIncome = ['salary', 'freelance', 'investment', 'gift', 'other'];
+            
+            const saved = localStorage.getItem(type + 'Categories');
+            return saved ? JSON.parse(saved) : (type === 'expense' ? defaultExpense : defaultIncome);
+        }
+        
+        function setupFormHandlers() {
+            const form = document.getElementById('transactionForm');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const transaction = {
+                    id: Date.now(), // Simple ID generation
+                    type: formData.get('type'),
+                    category: formData.get('category'),
+                    amount: parseFloat(formData.get('amount')),
+                    date: formData.get('date'),
+                    time: formData.get('time') || null,
+                    note: formData.get('note') || null
+                };
+                
+                // Validate
+                if (!transaction.category) {
+                    showToast('Please select a category', 'error');
+                    return;
+                }
+                
+                if (!transaction.amount || transaction.amount <= 0) {
+                    showToast('Please enter a valid amount', 'error');
+                    return;
+                }
+                
+                // Save transaction
+                saveTransaction(transaction);
+                
+                showToast('Transaction added successfully!', 'success');
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = 'transactions.html';
+                }, 1000);
+            });
+        }
+        
+        function saveTransaction(transaction) {
+            const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+            transactions.push(transaction);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+        
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                background: ${type === 'success' ? '#10b981' : '#ef4444'};
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Add CSS for animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            .radio-group {
+                display: flex;
+                gap: 20px;
+            }
+            .radio-label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                padding: 10px 15px;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                transition: all 0.2s;
+            }
+            .radio-label:hover {
+                border-color: #4f46e5;
+            }
+            .radio-label input[type="radio"]:checked + span {
+                color: #4f46e5;
+                font-weight: 600;
+            }
+            .radio-label input[type="radio"]:checked {
+                accent-color: #4f46e5;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

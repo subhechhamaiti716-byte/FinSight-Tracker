@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSight Tracker - Login</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="app-title">FinSight Tracker</h1>
+            <p class="app-subtitle">Your Personal Finance Manager</p>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+                <h2>Login</h2>
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="username" required 
+                           aria-required="true" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required 
+                           aria-required="true" autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <p class="auth-switch">
+                    Don't have an account? 
+                    <a href="#" id="showSignup" role="button">Sign up</a>
+                </p>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form hidden">
+                <h2>Sign Up</h2>
+                <div class="form-group">
+                    <label for="signupUsername">Username</label>
+                    <input type="text" id="signupUsername" name="username" required 
+                           aria-required="true" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" name="password" required 
+                           aria-required="true" autocomplete="new-password" minlength="6">
+                    <small>Minimum 6 characters</small>
+                </div>
+                <div class="form-group">
+                    <label for="signupPasswordConfirm">Confirm Password</label>
+                    <input type="password" id="signupPasswordConfirm" name="passwordConfirm" 
+                           required aria-required="true" autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Sign Up</button>
+                <p class="auth-switch">
+                    Already have an account? 
+                    <a href="#" id="showLogin" role="button">Login</a>
+                </p>
+            </form>
+
+            <div id="authMessage" class="message hidden" role="alert"></div>
+        </div>
+    </div>
+
+    <!-- Simple inline script for GitHub Pages compatibility -->
+    <script>
+        // Simple authentication for GitHub Pages
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const showSignupLink = document.getElementById('showSignup');
+            const showLoginLink = document.getElementById('showLogin');
+            const messageDiv = document.getElementById('authMessage');
+            
+            // Toggle between forms
+            showSignupLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                messageDiv.classList.add('hidden');
+            });
+            
+            showLoginLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                signupForm.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+                messageDiv.classList.add('hidden');
+            });
+            
+            // Simple login (for demo purposes)
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                
+                if (username && password) {
+                    // Store user in sessionStorage
+                    sessionStorage.setItem('currentUser', username);
+                    showMessage('Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showMessage('Please enter username and password', 'error');
+                }
+            });
+            
+            // Simple signup (for demo purposes)
+            signupForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('signupUsername').value.trim();
+                const password = document.getElementById('signupPassword').value;
+                const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
+                
+                if (password !== passwordConfirm) {
+                    showMessage('Passwords do not match', 'error');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    showMessage('Password must be at least 6 characters', 'error');
+                    return;
+                }
+                
+                if (username && password) {
+                    // Store user in sessionStorage
+                    sessionStorage.setItem('currentUser', username);
+                    showMessage('Account created successfully! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showMessage('Please fill all fields', 'error');
+                }
+            });
+            
+            function showMessage(message, type) {
+                messageDiv.textContent = message;
+                messageDiv.className = 'message ' + type;
+                messageDiv.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

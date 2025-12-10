@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - FinSight Tracker</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" role="navigation" aria-label="Main navigation">
+            <div class="sidebar-header">
+                <h1>💰 FinSight</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="dashboard.html">📊 Dashboard</a></li>
+                <li><a href="transactions.html">💳 Transactions</a></li>
+                <li><a href="add-transaction.html">➕ Add Transaction</a></li>
+                <li><a href="budgets.html">🎯 Budgets</a></li>
+                <li><a href="settings.html" class="active" aria-current="page">⚙️ Settings</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <span id="currentUser" class="user-info"></span>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h2>Settings</h2>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+            </header>
+
+            <!-- Theme Settings -->
+            <div class="card">
+                <h3>🎨 Appearance</h3>
+                <div class="setting-item">
+                    <label for="themeToggle">Theme</label>
+                    <select id="themeToggle" aria-label="Select theme">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Currency Settings -->
+            <div class="card">
+                <h3>💱 Currency</h3>
+                <div class="setting-item">
+                    <label for="currencySelect">Default Currency</label>
+                    <select id="currencySelect" aria-label="Select currency">
+                        <option value="INR">₹ INR - Indian Rupee</option>
+                        <option value="USD">$ USD - US Dollar</option>
+                        <option value="EUR">€ EUR - Euro</option>
+                        <option value="JPY">¥ JPY - Japanese Yen</option>
+                        <option value="GBP">£ GBP - British Pound</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Category Management -->
+            <div class="card">
+                <h3>📂 Manage Categories</h3>
+                <div class="category-management">
+                    <h4>Expense Categories</h4>
+                    <div id="expenseCategoriesList" class="categories-list"></div>
+                    <div class="add-category">
+                        <input type="text" id="newExpenseCategory" placeholder="New expense category">
+                        <button id="addExpenseCategoryBtn" class="btn btn-small">Add</button>
+                    </div>
+
+                    <h4>Income Categories</h4>
+                    <div id="incomeCategoriesList" class="categories-list"></div>
+                    <div class="add-category">
+                        <input type="text" id="newIncomeCategory" placeholder="New income category">
+                        <button id="addIncomeCategoryBtn" class="btn btn-small">Add</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="card">
+                <h3>💾 Data Management</h3>
+                <div class="data-controls">
+                    <div class="setting-item">
+                        <label>Export Data</label>
+                        <button id="exportDataBtn" class="btn btn-secondary">Export to JSON</button>
+                    </div>
+                    <div class="setting-item">
+                        <label>Import Data</label>
+                        <input type="file" id="importDataInput" accept=".json" style="display: none;">
+                        <button id="importDataBtn" class="btn btn-secondary">Import from JSON</button>
+                    </div>
+                    <div class="setting-item">
+                        <label>Clear All Data</label>
+                        <button id="clearDataBtn" class="btn btn-danger">Clear All Data</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Settings page functionality for GitHub Pages
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Display user
+            document.getElementById('currentUser').textContent = '👤 ' + currentUser;
+            
+            // Logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                sessionStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            });
+            
+            // Mobile menu toggle
+            const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (mobileMenuToggle) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+            
+            // Load settings
+            loadSettings();
+            setupSettingsHandlers();
+        });
+        
+        function loadSettings() {
+            // Load theme setting
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.getElementById('themeToggle').value = savedTheme;
+            applyTheme(savedTheme);
+            
+            // Load currency setting
+            const savedCurrency = localStorage.getItem('currency') || 'INR';
+            document.getElementById('currencySelect').value = savedCurrency;
+            
+            // Load categories
+            loadCategories();
+        }
+        
+        function setupSettingsHandlers() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('change', function(e) {
+                const theme = e.target.value;
+                localStorage.setItem('theme', theme);
+                applyTheme(theme);
+                showToast('Theme updated successfully', 'success');
+            });
+            
+            // Currency selector
+            document.getElementById('currencySelect').addEventListener('change', function(e) {
+                const currency = e.target.value;
+                localStorage.setItem('currency', currency);
+                showToast('Currency updated successfully', 'success');
+            });
+            
+            // Add expense category
+            document.getElementById('addExpenseCategoryBtn').addEventListener('click', function() {
+                const input = document.getElementById('newExpenseCategory');
+                const newCategory = input.value.trim();
+                
+                if (newCategory) {
+                    addCategory('expense', newCategory);
+                    input.value = '';
+                    loadCategories();
+                    showToast('Category added successfully', 'success');
+                }
+            });
+            
+            // Add income category
+            document.getElementById('addIncomeCategoryBtn').addEventListener('click', function() {
+                const input = document.getElementById('newIncomeCategory');
+                const newCategory = input.value.trim();
+                
+                if (newCategory) {
+                    addCategory('income', newCategory);
+                    input.value = '';
+                    loadCategories();
+                    showToast('Category added successfully', 'success');
+                }
+            });
+            
+            // Export data
+            document.getElementById('exportDataBtn').addEventListener('click', function() {
+                exportData();
+            });
+            
+            // Import data
+            document.getElementById('importDataBtn').addEventListener('click', function() {
+                document.getElementById('importDataInput').click();
+            });
+            
+            document.getElementById('importDataInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    importData(file);
+                }
+            });
+            
+            // Clear all data
+            document.getElementById('clearDataBtn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear ALL data? This cannot be undone!')) {
+                    if (confirm('This will delete all transactions, budgets, and settings. Continue?')) {
+                        clearAllData();
+                    }
+                }
+            });
+        }
+        
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+        
+        function loadCategories() {
+            const expenseCategories = getCategories('expense');
+            const incomeCategories = getCategories('income');
+            
+            renderCategories('expenseCategoriesList', expenseCategories, 'expense');
+            renderCategories('incomeCategoriesList', incomeCategories, 'income');
+        }
+        
+        function getCategories(type) {
+            const defaultExpense = ['food', 'transport', 'medical', 'rent', 'entertainment', 'shopping', 'bills', 'other'];
+            const defaultIncome = ['salary', 'freelance', 'investment', 'gift', 'other'];
+            
+            const saved = localStorage.getItem(type + 'Categories');
+            return saved ? JSON.parse(saved) : (type === 'expense' ? defaultExpense : defaultIncome);
+        }
+        
+        function addCategory(type, category) {
+            const categories = getCategories(type);
+            if (!categories.includes(category)) {
+                categories.push(category);
+                localStorage.setItem(type + 'Categories', JSON.stringify(categories));
+            }
+        }
+        
+        function removeCategory(type, category) {
+            const categories = getCategories(type);
+            const filtered = categories.filter(cat => cat !== category);
+            localStorage.setItem(type + 'Categories', JSON.stringify(filtered));
+        }
+        
+        function renderCategories(containerId, categories, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = categories.map(cat => `
+                <div class="category-tag">
+                    <span>${cat}</span>
+                    <button onclick="deleteCategoryHandler('${type}', '${cat}')" class="delete-btn">×</button>
+                </div>
+            `).join('');
+        }
+        
+        function deleteCategoryHandler(type, category) {
+            if (confirm(`Delete category "${category}"?`)) {
+                removeCategory(type, category);
+                loadCategories();
+                showToast('Category deleted successfully', 'success');
+            }
+        }
+        
+        function exportData() {
+            const data = {
+                transactions: JSON.parse(localStorage.getItem('transactions') || '[]'),
+                budgets: JSON.parse(localStorage.getItem('budgets') || '[]'),
+                expenseCategories: getCategories('expense'),
+                incomeCategories: getCategories('income'),
+                settings: {
+                    theme: localStorage.getItem('theme') || 'light',
+                    currency: localStorage.getItem('currency') || 'INR'
+                },
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `finsight-export-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Data exported successfully', 'success');
+        }
+        
+        function importData(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.transactions) localStorage.setItem('transactions', JSON.stringify(data.transactions));
+                    if (data.budgets) localStorage.setItem('budgets', JSON.stringify(data.budgets));
+                    if (data.expenseCategories) localStorage.setItem('expenseCategories', JSON.stringify(data.expenseCategories));
+                    if (data.incomeCategories) localStorage.setItem('incomeCategories', JSON.stringify(data.incomeCategories));
+                    if (data.settings) {
+                        if (data.settings.theme) localStorage.setItem('theme', data.settings.theme);
+                        if (data.settings.currency) localStorage.setItem('currency', data.settings.currency);
+                    }
+                    
+                    showToast('Data imported successfully! Refreshing...', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } catch (error) {
+                    showToast('Error importing data: Invalid file format', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function clearAllData() {
+            localStorage.clear();
+            sessionStorage.clear();
+            showToast('All data cleared. Redirecting to login...', 'success');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+        
+        function showToast(message, type) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                background: ${type === 'success' ? '#10b981' : '#ef4444'};
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Add CSS for animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            .category-tag {
+                display: inline-flex;
+                align-items: center;
+                background: #f3f4f6;
+                padding: 5px 10px;
+                border-radius: 15px;
+                margin: 2px;
+                font-size: 14px;
+            }
+            .category-tag .delete-btn {
+                background: none;
+                border: none;
+                color: #ef4444;
+                margin-left: 8px;
+                cursor: pointer;
+                font-size: 16px;
+                line-height: 1;
+            }
+            .category-tag .delete-btn:hover {
+                color: #dc2626;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

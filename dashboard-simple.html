@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSight Tracker - Dashboard</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>FinSight Tracker</h2>
+                <div class="user-info">
+                    <span id="currentUser">👤 User</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="dashboard-simple.html" class="active">📊 Dashboard</a></li>
+                <li><a href="transactions-simple.html">💳 Transactions</a></li>
+                <li><a href="budgets-simple.html">💰 Budgets</a></li>
+                <li><a href="settings-simple.html">⚙️ Settings</a></li>
+                <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="page-header">
+                <h1>Dashboard</h1>
+                <p>Welcome to your financial overview</p>
+            </header>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="card">
+                    <h3>Total Balance</h3>
+                    <div class="amount" id="totalBalance">₹0</div>
+                </div>
+                <div class="card">
+                    <h3>Total Income</h3>
+                    <div class="amount positive" id="totalIncome">₹0</div>
+                </div>
+                <div class="card">
+                    <h3>Total Expenses</h3>
+                    <div class="amount negative" id="totalExpenses">₹0</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Expense Breakdown</h3>
+                    <canvas id="expensePieChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Monthly Overview</h3>
+                    <canvas id="monthlyBarChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <div class="action-buttons">
+                    <a href="add-transaction-simple.html" class="btn btn-primary">Add Transaction</a>
+                    <a href="budgets-simple.html" class="btn btn-secondary">Set Budget</a>
+                    <a href="transactions-simple.html" class="btn btn-secondary">View All Transactions</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simple dashboard functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index-simple.html';
+                return;
+            }
+            
+            // Display user
+            document.getElementById('currentUser').textContent = '👤 ' + currentUser;
+            
+            // Logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                sessionStorage.removeItem('currentUser');
+                window.location.href = 'index-simple.html';
+            });
+            
+            // Load demo data
+            loadDashboardData();
+            
+            // Create demo charts
+            createDemoCharts();
+        });
+        
+        function loadDashboardData() {
+            // Demo data for display
+            document.getElementById('totalBalance').textContent = '₹25,000';
+            document.getElementById('totalIncome').textContent = '₹50,000';
+            document.getElementById('totalExpenses').textContent = '₹25,000';
+        }
+        
+        function createDemoCharts() {
+            // Expense Pie Chart
+            const expenseCtx = document.getElementById('expensePieChart').getContext('2d');
+            new Chart(expenseCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Food', 'Transport', 'Entertainment', 'Bills', 'Other'],
+                    datasets: [{
+                        data: [8000, 5000, 3000, 6000, 3000],
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Monthly Bar Chart
+            const monthlyCtx = document.getElementById('monthlyBarChart').getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Oct', 'Nov', 'Dec'],
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: [45000, 50000, 48000],
+                            backgroundColor: '#10b981'
+                        },
+                        {
+                            label: 'Expenses',
+                            data: [30000, 25000, 28000],
+                            backgroundColor: '#ef4444'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
